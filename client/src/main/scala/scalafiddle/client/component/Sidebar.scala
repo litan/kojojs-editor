@@ -84,59 +84,6 @@ object Sidebar {
               )
             )
           ),
-          div(cls := "title", "Libraries", i(cls := "icon dropdown")),
-          div(cls := "content")(
-            div(cls := "ui horizontal divider header",
-                (style := js.Dynamic.literal(display = "none")).when(fd.libraries.isEmpty),
-                "Selected"),
-            div(cls := "liblist", (style := js.Dynamic.literal(display = "none")).when(fd.libraries.isEmpty))(
-              div(cls := "ui middle aligned divided list")(
-                fd.libraries.toTagMod(renderLibrary(_, SelectedLib, fd.scalaVersion, props.dispatch)))
-            ),
-            div(cls := "ui horizontal divider header", "Available"),
-            div(cls := "ui checkbox")(
-              input.checkbox(name := "all-versions",
-                             checked := state.showAllVersions,
-                             onChange --> $.modState(s => s.copy(showAllVersions = !s.showAllVersions))),
-              label("Show all versions")
-            ),
-            div(cls := "liblist")(
-              libGroups.toTagMod {
-                case (group, libraries) =>
-                  div(
-                    h5(cls := "lib-group", group.replaceFirst("\\d+:", "")),
-                    div(cls := "ui middle aligned divided list")(
-                      libraries.toTagMod(renderLibrary(_, AvailableLib, fd.scalaVersion, props.dispatch))
-                    )
-                  )
-              }
-            ),
-            div(cls := "ui grid")(
-              div(cls := "eight wide column")(
-                h4("Scala version")
-              ),
-              div(cls := "eight wide column right aligned")(
-                div(cls := "grouped fields")(
-                  ScalaFiddleConfig.scalaVersions.toTagMod { version =>
-                    div(cls := "field")(
-                      div(cls := "ui radio checkbox")(
-                        input.radio(
-                          name := "scalaversion",
-                          value := version,
-                          checked := props.data().scalaVersion == version,
-                          onChange ==> { (e: ReactEventFromInput) =>
-                            val newVersion = e.currentTarget.value
-                            props.dispatch(SelectScalaVersion(newVersion))
-                          }
-                        ),
-                        label(version)
-                      )
-                    )
-                  }
-                )
-              )
-            )
-          )
         ),
         div(cls := "bottom")(
           div(cls := "ui icon basic button toggle", onClick ==> { (e: ReactEventFromHtml) =>
