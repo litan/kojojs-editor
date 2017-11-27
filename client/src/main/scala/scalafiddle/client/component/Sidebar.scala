@@ -27,7 +27,7 @@ object Sidebar {
     def dispatch(a: Action) = data.dispatchCB(a)
   }
 
-  case class State(showAllVersions: Boolean, isOpen: Boolean = true)
+  case class State(showAllVersions: Boolean, isOpen: Boolean = false)
 
   case class Backend($ : BackendScope[Props, State]) {
 
@@ -54,7 +54,7 @@ object Sidebar {
         case _ =>
           ("Anonymous", "/assets/images/anon.png")
       }
-      div.ref(sideBarRef = _)(cls := "sidebar")(
+      div.ref(sideBarRef = _)(cls := "sidebar folded")(
         div.ref(accordionRef = _)(cls := "ui accordion")(
           div(cls := "title large active", "Info", i(cls := "icon dropdown")),
           div(cls := "content active")(
