@@ -141,7 +141,7 @@ object FiddleEditor {
                     width := "100%",
                     height := "100%",
                     frameBorder := "0",
-                    sandbox := "allow-scripts allow-popups allow-popups-to-escape-sandbox",
+                    sandbox := "allow-scripts allow-same-origin allow-popups allow-popups-to-escape-sandbox",
                     src := s"/resultframe?theme=light"
                   )
                 )

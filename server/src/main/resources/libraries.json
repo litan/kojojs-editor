@@ -2,19 +2,6 @@
   {
     "group": "Web",
     "libraries": [
-      {
-        "name": "Pixi",
-        "organization": "com.fbksoft",
-        "artifact": "pixi-scala-js",
-        "doc": "https://widok.github.io",
-        "versions": [
-          {
-            "version": "1.0",
-            "scalaVersions": ["2.12"]
-          }
-        ],
-        "compileTimeOnly": false
-      }
     ]
   },
   {
