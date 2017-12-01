@@ -92,7 +92,7 @@ class Application @Inject()(
     loadFiddle(fiddleId, version.toInt, source).map {
       case Success(fd) =>
         val fdJson = write(fd)
-        Ok(views.html.index("ScalaFiddle", fdJson, if (fiddleId.nonEmpty) Some(s"$fiddleId/$version") else None))
+        Ok(views.html.index("Kojo Fiddle", fdJson, if (fiddleId.nonEmpty) Some(s"$fiddleId/$version") else None))
           .withHeaders(CACHE_CONTROL -> "max-age=3600")
       case Failure(ex) =>
         NotFound
