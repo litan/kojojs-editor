@@ -100,9 +100,7 @@ object FiddleEditor {
               "Update").when(showUpdate),
             div(cls := "ui basic button", onClick --> props.dispatch(ForkFiddle(reconstructSource(state))))(
               Icon.codeFork,
-              "Fork").when(fiddleHasId),
-            Dropdown("top basic button embed-options", span("Embed", Icon.caretDown))(_ =>
-              div(cls := "menu", display.block)(EmbedEditor(props.fiddleId.get))).when(fiddleHasId)
+              "Fork").when(fiddleHasId)
           ),
           div(cls := "right")(
             div(cls := "ui basic button", onClick --> props.dispatch(ShowHelp(ScalaFiddleConfig.helpURL)))(
