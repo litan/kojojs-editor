@@ -113,19 +113,6 @@ object FiddleEditor {
           Sidebar(props.data),
           div(cls := "editor-area")(
             div(cls := "editor")(
-              div(cls := "optionsmenu")(
-                Dropdown("top right pointing mini button optionsbutton", span("SCALA", i(cls := "icon setting")))(_ =>
-                  div(cls := "menu", display.block)(
-                    div(cls := "header")("Options"),
-                    div(cls := "divider"),
-                    div(cls := "ui input")(
-                      div(cls := "ui checkbox")(
-                        input.checkbox(checked := state.showTemplate, onChange --> switchTemplate),
-                        label("Show template")
-                      )
-                    )
-                ))
-              ),
               div.ref(editorRef = _)(id := "editor")
             ),
             state.outputData match {
