@@ -92,6 +92,18 @@ object FiddleEditor {
               Icon.play,
               "Run"
             ),
+            div(
+              cls := "ui basic button",
+              onClick --> {
+                Callback.future(beginCompilation().map(_ => {
+                  buildStopReloadSource.flatMap { source =>
+                    props.dispatch(compile(source, FastOpt))
+                  }
+                }))
+              },
+              Icon.stop,
+              "Stop/Reload"
+            ),
             div(cls := "ui basic button", onClick --> props.dispatch(SaveFiddle(reconstructSource(state))))(
               Icon.pencil,
               "Save").when(showSave),
@@ -126,7 +138,7 @@ object FiddleEditor {
                     width := "100%",
                     height := "100%",
                     frameBorder := "0",
-                    sandbox := "allow-scripts allow-same-origin allow-popups allow-popups-to-escape-sandbox",
+                    sandbox := "allow-scripts allow-same-origin allow-popups allow-popups-to-escape-sandbox allow-modals",
                     src := s"/resultframe?theme=light"
                   )
                 )
@@ -271,6 +283,19 @@ object FiddleEditor {
       source
     }
 
+    def reconstructStopReloadSource(state: State): String = {
+      val editorContent = ""
+      val source = if (state.showTemplate) {
+        editorContent
+      } else {
+        val reIndent  = " " * state.indent
+        val newSource = editorContent.split("\n").map(reIndent + _)
+        (state.preCode ++ newSource ++ state.postCode).mkString("\n")
+      }
+      //println(s"Reconstructed:\n$source")
+      source
+    }
+
     def addDeps(source: String, deps: Seq[Library], scalaVersion: String): String = {
       val extraDeps = deps.flatMap(_.extraDeps)
       val allDeps   = extraDeps ++ deps.map(Library.stringify)
@@ -285,6 +310,16 @@ object FiddleEditor {
         state <- $.state
       } yield {
         val source = reconstructSource(state)
+        addDeps(source, props.data().libraries, props.data().scalaVersion)
+      }
+    }
+
+    def buildStopReloadSource: CallbackTo[String] = {
+      for {
+        props <- $.props
+        state <- $.state
+      } yield {
+        val source = reconstructStopReloadSource(state)
         addDeps(source, props.data().libraries, props.data().scalaVersion)
       }
     }
