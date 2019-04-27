@@ -1,5 +1,6 @@
 import sbt._
 import org.scalajs.sbtplugin.ScalaJSPlugin.autoImport._
+import org.portablescala.sbtplatformdeps.PlatformDepsPlugin.autoImport._
 
 /**
   * Application settings. Configure the build for your application here.
@@ -20,7 +21,7 @@ object Settings {
 
   /** Declare global dependency versions here to avoid mismatches in multi part dependencies */
   object versions {
-    val scala        = "2.12.4"
+    val scala        = "2.12.8"
     val scalatest    = "3.0.3"
     val scalaDom     = "0.9.4"
     val scalajsReact = "1.0.0"
