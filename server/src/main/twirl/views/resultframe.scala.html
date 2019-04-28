@@ -10,7 +10,7 @@
         <div id="fiddle-container">
             <div id="canvas-holder"/>
             <div id="output"><pre></pre></div>
-            <canvas id="canvas" style="position: absolute"></canvas>
+            <canvas id="canvas" style=""></canvas>
             <script src=@routes.Assets.versioned("javascript/pixi.min.js")></script>
             <script src=@routes.Assets.versioned("javascript/jsts.min.js")></script>
             <script type="text/javascript">
@@ -22,7 +22,7 @@
                     switch (msg.cmd) {
                         case "clear":
                             result.innerHTML = "";
-                            canvas.height = container.clientHeight;
+                            canvas.height = 0;
                             canvas.width = container.clientWidth;
                             canvas.getContext("2d").clearRect(0, 0, 10000, 10000);
                             break;
@@ -42,7 +42,7 @@
                         case "showCode":
                             if (result.getAttribute("data-jscode") != "true") {
                                 result.setAttribute("data-jscode", "true");
-                                canvas.height = container.clientHeight;
+                                canvas.height = 0;
                                 canvas.width = container.clientWidth;
                                 canvas.getContext("2d").clearRect(0, 0, 10000, 10000);
                                 result.innerHTML = "<h2>Compiled JS code</h2>";
