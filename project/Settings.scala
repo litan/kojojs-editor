@@ -21,9 +21,9 @@ object Settings {
 
   /** Declare global dependency versions here to avoid mismatches in multi part dependencies */
   object versions {
-    val scala        = "2.12.8"
+    val scala        = "2.12.11"
     val scalatest    = "3.0.3"
-    val scalaDom     = "0.9.4"
+    val scalaDom     = "0.9.8"
     val scalajsReact = "1.0.0"
     val scalaCSS     = "0.5.3"
     val autowire     = "0.2.6"
@@ -34,12 +34,12 @@ object Settings {
     val slick        = "3.2.0"
     val silhouette   = "5.0.1"
     val kamon        = "0.6.7"
-    val base64       = "0.2.3"
+    val base64       = "0.2.6"
     val scalaParse   = "0.4.3"
     val scalatags    = "0.6.7"
 
     val jQuery   = "3.2.0"
-    val semantic = "2.2.10"
+    val semantic = "2.3.1"
     val ace      = "1.2.2"
 
     val react = "15.5.4"
