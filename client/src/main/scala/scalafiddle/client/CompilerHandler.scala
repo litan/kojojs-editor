@@ -64,6 +64,8 @@ class CompilerHandler[M](modelRW: ModelRW[M, OutputData]) extends ActionHandler(
       effectOnly(Effect(effect))
 
     case CompileFiddle(source, optimization) =>
+      val startTime = System.currentTimeMillis()
+      def compilationTime = (System.currentTimeMillis() - startTime) / 1000.0
       val effect = Ajax
         .get(
           url = s"${ScalaFiddleConfig.compilerURL}/compile?opt=${optimization.flag}&source=${encodeSource(source)}"
@@ -71,8 +73,10 @@ class CompilerHandler[M](modelRW: ModelRW[M, OutputData]) extends ActionHandler(
         .map { request =>
           read[CompilationResponse](request.responseText) match {
             case CompilationResponse(Some(jsCode), _, log) =>
+              println(f"Compilation (success) took: $compilationTime%.2f seconds")
               CompilerResult(Right(jsCode), log)
             case CompilationResponse(None, annotations, log) =>
+              println(f"Compilation (error) took: $compilationTime%.2f seconds")
               CompilerResult(Left(annotations), log)
           }
         } recover {
