@@ -14,6 +14,7 @@
             <script src=@routes.Assets.versioned("javascript/pixi.min.js")></script>
             <script src=@routes.Assets.versioned("javascript/jsts.min.js")></script>
             <script type="text/javascript">
+                PIXI.utils.skipHello();
                 var canvas = document.getElementById("canvas");
                 var result = document.getElementById("output");
                 var container = document.getElementById("fiddle-container");
