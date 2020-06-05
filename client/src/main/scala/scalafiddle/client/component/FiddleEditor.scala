@@ -105,19 +105,19 @@ object FiddleEditor {
               "Stop/Reload"
             ),
             div(cls := "ui basic button", onClick --> props.dispatch(SaveFiddle(reconstructSource(state))))(
-              Icon.pencil,
+              Icon.save,
               "Save").when(showSave),
             div(cls := "ui basic button", onClick --> props.dispatch(UpdateFiddle(reconstructSource(state))))(
-              Icon.pencil,
+              Icon.pencilSquare,
               "Update").when(showUpdate),
             div(cls := "ui basic button", onClick --> props.dispatch(ForkFiddle(reconstructSource(state))))(
               Icon.codeFork,
               "Fork").when(fiddleHasId)
           ),
           div(cls := "right")(
-            div(cls := "ui basic button", onClick --> props.dispatch(ShowHelp(ScalaFiddleConfig.helpURL)))(
-              "Help"
-            ).when(ScalaFiddleConfig.helpURL.nonEmpty),
+            div(cls := "ui basic button")(
+              a(href := "http://www.lund.se", target := "_blank", "Hosted at Lund University")
+            ),
             UserLogin(props.loginData)
           )
         ),
