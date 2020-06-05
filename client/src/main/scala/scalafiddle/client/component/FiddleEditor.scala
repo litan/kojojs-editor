@@ -216,15 +216,15 @@ object FiddleEditor {
         ),
         footer(
           div(cls := "right")(
-            div(cls := "compact ui basic button")(
+            div(cls := "ui blue basic label")(
               "Powered by ",
-              a(href := "http://www.kogics.net/kojo", target := "_blank", "Kojo"),
+              a(href := "http://www.kogics.net/kojo", target := "_blank", color := "black", "Kojo"),
               " and ",
-              a(href := "https://github.com/scalafiddle", target := "_blank", "ScalaFiddle")
+              a(href := "https://github.com/scalafiddle", target := "_blank", color := "black", "ScalaFiddle")
             ),
-            div(cls := "compact ui basic button")(
+            div(cls := "ui orange basic label")(
               "Hosted at ",
-              a(href := "http://www.lund.se", target := "_blank", "Lund University")
+              a(href := "http://www.lund.se", target := "_blank", color := "black", "Lund University")
             )
           )
         )
