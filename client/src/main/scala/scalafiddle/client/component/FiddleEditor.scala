@@ -115,9 +115,6 @@ object FiddleEditor {
               "Fork").when(fiddleHasId)
           ),
           div(cls := "right")(
-            div(cls := "ui basic button")(
-              a(href := "http://www.lund.se", target := "_blank", "Hosted at Lund University")
-            ),
             UserLogin(props.loginData)
           )
         ),
@@ -215,6 +212,20 @@ object FiddleEditor {
                   )
                 )
             }
+          )
+        ),
+        footer(
+          div(cls := "right")(
+            div(cls := "compact ui basic button")(
+              "Powered by ",
+              a(href := "http://www.kogics.net/kojo", target := "_blank", "Kojo"),
+              " and ",
+              a(href := "https://github.com/scalafiddle", target := "_blank", "ScalaFiddle")
+            ),
+            div(cls := "compact ui basic button")(
+              "Hosted at ",
+              a(href := "http://www.lund.se", target := "_blank", "Lund University")
+            )
           )
         )
       )

@@ -92,6 +92,25 @@ body {
 
   }
 
+  > footer {
+    .flex-container;
+    overflow: visible;
+    height: 45px;
+    min-width: 1000px;
+    padding: 5px;
+    align-items: center;
+    box-shadow: 0 0 3px rgba(66, 66, 86, .2);
+    z-index: 999;
+
+    > .right {
+      display: flex;
+      flex-wrap: nowrap;
+      flex: 1;
+      align-items: center;
+      justify-content: flex-end
+    }
+  }
+
   > .main {
     .stretchy;
     .flex-container;
