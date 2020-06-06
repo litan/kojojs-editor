@@ -456,7 +456,7 @@ object FiddleEditor {
                 def applyResults(results: Seq[(String, String)]): Unit = {
                   def params(signature: String): String = {
                     val parts = signature.split(Array('(', ')'))
-                    if (parts.length > 2) {
+                    if (parts.length > 2 && parts(0).length == 0) {
                       val paramStr = parts(1)
                       val params = paramStr.split(',')
                       val pnames = params.map { p =>
@@ -471,19 +471,18 @@ object FiddleEditor {
 
                   val aceVersion = results.map {
                     case (name, value) =>
+                      val completionParams = params(name)
                       JsVal
                         .obj(
-                          "value" -> (value + params(name)),
+                          "value" -> (value + completionParams),
                           "caption" -> (value + name),
                           "completer" -> JsVal.obj(
                             "insertMatch" -> { (editor: Dyn, data: Dyn) =>
                               val text = data.value.asInstanceOf[String]
-                              val pos = editor.getCursorPosition()
-                              val r = editor.getSelectionRange()
-                              val completionStartCol = pos.column.asInstanceOf[Int] - prefix.asInstanceOf[String].length
-                              r.setStart(pos.row, completionStartCol)
-                              r.setEnd(pos.row, pos.column)
-                              editor.session.replace(r, text)
+                              editor.removeWordLeft()
+                              val completionStartPos = editor.getCursorPosition()
+                              editor.session.insert(completionStartPos, text)
+                              val completionStartCol = completionStartPos.column.asInstanceOf[Int]
                               val bracketOpenIndex = text.indexOf('(')
                               val bracketCloseIndex = text.indexOf(')')
                               val delta = if (bracketOpenIndex != -1) {
@@ -492,7 +491,12 @@ object FiddleEditor {
                               else {
                                 text.length
                               }
-                              editor.moveCursorTo(pos.row, completionStartCol + delta)
+                              editor.moveCursorTo(completionStartPos.row, completionStartCol + delta)
+                              val paramsStrLen = completionParams.length
+                              if (paramsStrLen != 0 && paramsStrLen != 2) {
+                                // avoid no params and empty brackets
+                                editor.getSelection().selectWordRight()
+                              }
                             }
                           ).value
                         )
