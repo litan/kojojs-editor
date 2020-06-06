@@ -379,6 +379,7 @@ object FiddleEditor {
         editor.getSession().setOption("useWorker", false)
         editor.updateDynamic("completer")(completer) // because of SI-7420
         editor.updateDynamic("$blockScrolling")(Double.PositiveInfinity)
+        editor.setFontSize("16px") // default is 14
 
         val globalBindings = Seq(
           EditorBinding("Compile",
@@ -449,33 +450,69 @@ object FiddleEditor {
         // register auto complete
         editor.completers = js.Array(
           JsVal
-            .obj(
-              "getCompletions" -> { (editor: Dyn, session: Dyn, pos: Dyn, prefix: Dyn, callback: Dyn) =>
-                {
-                  def applyResults(results: Seq[(String, String)]): Unit = {
-                    val aceVersion = results.map {
-                      case (name, value) =>
-                        JsVal
-                          .obj(
-                            "value"   -> value,
-                            "caption" -> (value + name)
-                          )
-                          .value
+          .obj(
+            "getCompletions" -> { (editor: Dyn, session: Dyn, pos: Dyn, prefix: Dyn, callback: Dyn) =>
+              {
+                def applyResults(results: Seq[(String, String)]): Unit = {
+                  def params(signature: String): String = {
+                    val parts = signature.split(Array('(', ')'))
+                    if (parts.length > 2) {
+                      val paramStr = parts(1)
+                      val params = paramStr.split(',')
+                      val pnames = params.map { p =>
+                        p.split(':')(0)
+                      }
+                      pnames.mkString("(", ", ", ")")
                     }
-                    callback(null, js.Array(aceVersion: _*))
+                    else {
+                      ""
+                    }
                   }
-                  val (row, col) = coordinatesFrom(pos.row.asInstanceOf[Int], pos.column.asInstanceOf[Int])
-                  // build full source
-                  buildFullSource
-                    .flatMap { source =>
-                      // dispatch an action to fetch completion results
-                      props.dispatch(AutoCompleteFiddle(source, row, col, applyResults))
-                    }
-                    .runNow()
+
+                  val aceVersion = results.map {
+                    case (name, value) =>
+                      JsVal
+                        .obj(
+                          "value" -> (value + params(name)),
+                          "caption" -> (value + name),
+                          "completer" -> JsVal.obj(
+                            "insertMatch" -> { (editor: Dyn, data: Dyn) =>
+                              val text = data.value.asInstanceOf[String]
+                              val pos = editor.getCursorPosition()
+                              val r = editor.getSelectionRange()
+                              val completionStartCol = pos.column.asInstanceOf[Int] - prefix.asInstanceOf[String].length
+                              r.setStart(pos.row, completionStartCol)
+                              r.setEnd(pos.row, pos.column)
+                              editor.session.replace(r, text)
+                              val bracketOpenIndex = text.indexOf('(')
+                              val bracketCloseIndex = text.indexOf(')')
+                              val delta = if (bracketOpenIndex != -1) {
+                                if (bracketCloseIndex == bracketOpenIndex + 1) bracketOpenIndex + 2 else bracketOpenIndex + 1
+                              }
+                              else {
+                                text.length
+                              }
+                              editor.moveCursorTo(pos.row, completionStartCol + delta)
+                            }
+                          ).value
+                        )
+                        .value
+                  }
+                  callback(null, js.Array(aceVersion: _*))
                 }
+                val (row, col) = coordinatesFrom(pos.row.asInstanceOf[Int], pos.column.asInstanceOf[Int])
+                // build full source
+                buildFullSource
+                  .flatMap { source =>
+                    // dispatch an action to fetch completion results
+                    props.dispatch(AutoCompleteFiddle(source, row, col, applyResults))
+                  }
+                  .runNow()
               }
-            )
-            .value)
+            }
+          )
+          .value
+        )
 
         // listen for changes in source code
         editor.on("input",

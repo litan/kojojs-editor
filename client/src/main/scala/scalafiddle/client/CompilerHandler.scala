@@ -57,7 +57,7 @@ class CompilerHandler[M](modelRW: ModelRW[M, OutputData]) extends ActionHandler(
           )
           .map { request =>
             val results = read[CompletionResponse](request.responseText)
-            println(s"Completion results: $results")
+//            println(s"Completion results: $results")
             callback(results.completions)
             NoAction
           }
