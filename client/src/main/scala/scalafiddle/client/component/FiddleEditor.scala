@@ -115,6 +115,10 @@ object FiddleEditor {
               "Fork").when(fiddleHasId)
           ),
           div(cls := "right")(
+            div(cls := "ui basic button")(
+              Icon.book,
+              a(href := "http://docs.kogics.net", target := "_blank", "Help")
+            ),
             UserLogin(props.loginData)
           )
         ),
