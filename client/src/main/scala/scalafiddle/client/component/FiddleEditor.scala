@@ -117,7 +117,7 @@ object FiddleEditor {
           div(cls := "right")(
             div(cls := "ui basic button")(
               Icon.book,
-              a(href := "http://docs.kogics.net", target := "_blank", "Help")
+              a(href := "https://docs.kogics.net/ikojo.html", target := "_blank", "Help")
             ),
             UserLogin(props.loginData)
           )
@@ -228,7 +228,18 @@ object FiddleEditor {
             ),
             div(cls := "ui orange basic label")(
               "Hosted at ",
-              a(href := "http://www.lund.se", target := "_blank", color := "black", "Lund University")
+              a(href := "https://www.lunduniversity.lu.se/", target := "_blank", color := "black", "Lund University")
+            ),
+            div(cls := "")(
+              "\u00a0\u00a0\u00a0\u00a0\u00a0\u00a0"
+            ),
+            div(cls := "ui teal basic button")(
+              Icon.download,
+              a(href := "https://www.kogics.net/kojo-download", target := "_blank", "Download Desktop Kojo")
+            ),
+            div(cls := "ui teal basic button")(
+              Icon.compass,
+              a(href := "https://docs.kogics.net/contribute-code.html", target := "_blank", "Contribute Code")
             )
           )
         )
