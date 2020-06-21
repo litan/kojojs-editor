@@ -130,6 +130,7 @@ object FiddleEditor {
             ),
             state.outputData match {
               case data: CompilerData =>
+                def allowFullScreen = VdomAttr("allowFullScreen")
                 div(cls := "output")(
                   div(cls := "label", state.status.show),
                   iframe.ref(resultRef = _)(
@@ -141,6 +142,7 @@ object FiddleEditor {
                     frameBorder := "0",
                     scrolling := "no",
                     overflow := "hidden",
+                    allowFullScreen := "true",
                     sandbox := "allow-scripts allow-same-origin allow-popups allow-popups-to-escape-sandbox allow-modals",
                     src := s"/resultframe?theme=light"
                   )
