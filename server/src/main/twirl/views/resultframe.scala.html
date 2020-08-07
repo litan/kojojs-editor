@@ -8,57 +8,58 @@
     </head>
     <body>
         <div id="fiddle-container">
-            <div id="canvas-holder"></div>
-            <div id="output"><pre></pre></div>
-            <canvas id="canvas" style="position: absolute"></canvas>
-            <script src=@routes.Assets.versioned("javascript/pixi.min.js")></script>
-            <script src=@routes.Assets.versioned("javascript/jsts.min.js")></script>
-            <script src=@routes.Assets.versioned("javascript/howler.min.js")></script>
-            <script type="text/javascript">
-                PIXI.utils.skipHello();
-                var canvas = document.getElementById("canvas");
-                var result = document.getElementById("output");
-                var container = document.getElementById("fiddle-container");
-                window.addEventListener('message', function (e) {
-                    var msg = e.data;
-                    switch (msg.cmd) {
-                        case "clear":
-                            result.innerHTML = "";
-                            canvas.height = 0;
-                            canvas.width = container.clientWidth;
-                            canvas.getContext("2d").clearRect(0, 0, 10000, 10000);
-                            break;
-                        case "print":
-                            result.innerHTML = msg.data;
-                            break;
-                        case "code":
-                            try {
-                                eval(msg.data);
-                                eval("var sf = ScalaFiddle;if(typeof sf === 'function') { if(typeof sf().main === 'function') sf().main() } else if(typeof sf.main === 'function') sf.main()");
-                            } catch (ex) {
-                                result.insertAdjacentHTML('beforeend', '<pre class="error">ERROR: ' + ex.message + '</pre>')
-                            } finally {
-                                e.source.postMessage("evalCompleted", "*");
-                            }
-                            break;
-                        case "showCode":
-                            if (result.getAttribute("data-jscode") != "true") {
-                                result.setAttribute("data-jscode", "true");
+            <div id="canvas-holder">
+                <div id="output"><pre></pre></div>
+                <canvas id="canvas" style="position: absolute"></canvas>
+                <script src=@routes.Assets.versioned("javascript/pixi.min.js")></script>
+                <script src=@routes.Assets.versioned("javascript/jsts.min.js")></script>
+                <script src=@routes.Assets.versioned("javascript/howler.min.js")></script>
+                <script type="text/javascript">
+                    PIXI.utils.skipHello();
+                    var canvas = document.getElementById("canvas");
+                    var result = document.getElementById("output");
+                    var container = document.getElementById("fiddle-container");
+                    window.addEventListener('message', function (e) {
+                        var msg = e.data;
+                        switch (msg.cmd) {
+                            case "clear":
+                                result.innerHTML = "";
                                 canvas.height = 0;
                                 canvas.width = container.clientWidth;
                                 canvas.getContext("2d").clearRect(0, 0, 10000, 10000);
-                                result.innerHTML = "<h2>Compiled JS code</h2>";
-                                var pre = document.createElement("pre");
-                                var code = document.createElement("code");
-                                code.setAttribute("class", "language-javascript");
-                                code.appendChild(document.createTextNode(msg.data));
-                                pre.appendChild(code);
-                                result.appendChild(pre);
-                            }
-                            break;
-                }
-            });
-            </script>
+                                break;
+                            case "print":
+                                result.innerHTML = msg.data;
+                                break;
+                            case "code":
+                                try {
+                                    eval(msg.data);
+                                    eval("var sf = ScalaFiddle;if(typeof sf === 'function') { if(typeof sf().main === 'function') sf().main() } else if(typeof sf.main === 'function') sf.main()");
+                                } catch (ex) {
+                                    result.insertAdjacentHTML('beforeend', '<pre class="error">ERROR: ' + ex.message + '</pre>')
+                                } finally {
+                                    e.source.postMessage("evalCompleted", "*");
+                                }
+                                break;
+                            case "showCode":
+                                if (result.getAttribute("data-jscode") != "true") {
+                                    result.setAttribute("data-jscode", "true");
+                                    canvas.height = 0;
+                                    canvas.width = container.clientWidth;
+                                    canvas.getContext("2d").clearRect(0, 0, 10000, 10000);
+                                    result.innerHTML = "<h2>Compiled JS code</h2>";
+                                    var pre = document.createElement("pre");
+                                    var code = document.createElement("code");
+                                    code.setAttribute("class", "language-javascript");
+                                    code.appendChild(document.createTextNode(msg.data));
+                                    pre.appendChild(code);
+                                    result.appendChild(pre);
+                                }
+                                break;
+                    }
+                });
+                </script>
+            </div>
         </div>
     </body>
 </html>
