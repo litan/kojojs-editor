@@ -1,6 +1,5 @@
 ### How to run in terminal:
 
-* Fork and clone this repo to your local machine.
 * Start `sbt` i terminal.
 * Execute the `update` command inside sbt.
 * Execute the `run` command inside sbt to compile/run the web-server
