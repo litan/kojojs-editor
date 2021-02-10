@@ -21,3 +21,7 @@ temp/*
 /server/src/main/resources/local.conf
 
 node_modules
+
+# vscode specific
+.vscode
+.metals
