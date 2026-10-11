@@ -151,6 +151,13 @@ class Application @Inject()(
   }
 
   def htmlScript(fiddleId: String, version: String) = Action { implicit request =>
+    // fiddleId is embedded unescaped in a JavaScript string below, so only the real id
+    // format may pass. version is already restricted to digits by the route pattern.
+    if (!ApiGuard.isFiddleId(fiddleId)) NotFound
+    else htmlScriptJs(fiddleId, version)
+  }
+
+  private def htmlScriptJs(fiddleId: String, version: String) = {
     val js =
       s"""(function() {
         |var listener = function(event) {
@@ -185,20 +192,25 @@ class Application @Inject()(
   val loginProviders = config.get[Seq[String]]("scalafiddle.loginProviders").map(AllLoginProviders.providers)
 
   def autowireApi(path: String) = silhouette.UserAwareAction.async { implicit request =>
-    val apiService: Api = new ApiService(persistence, request.identity, loginProviders)
+    // CSRF: the editor's own requests carry ApiHeader; another site's form or an opaque
+    // frame cannot.
+    if (!ApiGuard.allowed(request.headers)) Future.successful(Forbidden("Forbidden"))
+    else {
+      val apiService: Api = new ApiService(persistence, request.identity, loginProviders)
 
-    // get the request body as JSON
-    val b = request.body.asText.get
+      // get the request body as JSON
+      val b = request.body.asText.get
 
-    // call Autowire route
-    Router
-      .route[Api](apiService)(
-        autowire.Core.Request(path.split("/"), json.read(b).asInstanceOf[Js.Obj].value.toMap)
-      )
-      .map(buffer => {
-        val data = json.write(buffer)
-        Ok(data)
-      })
+      // call Autowire route
+      Router
+        .route[Api](apiService)(
+          autowire.Core.Request(path.split("/"), json.read(b).asInstanceOf[Js.Obj].value.toMap)
+        )
+        .map(buffer => {
+          val data = json.write(buffer)
+          Ok(data)
+        })
+    }
   }
 
   val passthroughParams = Seq(

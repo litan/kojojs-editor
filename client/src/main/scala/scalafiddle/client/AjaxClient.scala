@@ -3,6 +3,7 @@ package scalafiddle.client
 import org.scalajs.dom
 import upickle.Js
 import upickle.default._
+import scalafiddle.shared.ApiHeader
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
@@ -12,7 +13,8 @@ object AjaxClient extends autowire.Client[Js.Value, Reader, Writer] {
     dom.ext.Ajax
       .post(
         url = "/api/" + req.path.mkString("/"),
-        data = upickle.json.write(Js.Obj(req.args.toSeq: _*))
+        data = upickle.json.write(Js.Obj(req.args.toSeq: _*)),
+        headers = Map(ApiHeader.Name -> ApiHeader.Value)
       )
       .map(_.responseText)
       .map(upickle.json.read)

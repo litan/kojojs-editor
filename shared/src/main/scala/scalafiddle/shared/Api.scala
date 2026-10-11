@@ -2,6 +2,16 @@ package scalafiddle.shared
 
 import scala.concurrent.Future
 
+/**
+  * Header that every `/api` request must carry. Another site cannot add a custom header
+  * without a preflight request (`/api` is not open to CORS), so the server rejects requests
+  * without it.
+  */
+object ApiHeader {
+  val Name  = "X-Requested-With"
+  val Value = "kojojs"
+}
+
 case class LoginProvider(id: String, name: String, logoUrl: String)
 
 case class UserInfo(id: String, name: String, avatarUrl: Option[String], loggedIn: Boolean)
