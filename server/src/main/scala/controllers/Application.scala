@@ -11,6 +11,7 @@ import akka.pattern.ask
 import akka.util.Timeout
 import com.mohiva.play.silhouette.api.{LogoutEvent, Silhouette}
 import kamon.Kamon
+import play.api.libs.json.Json
 import play.api.mvc._
 import play.api.{Configuration, Environment, Logger, Mode}
 import slick.basic.DatabaseConfig
@@ -75,6 +76,15 @@ class Application @Inject()(
   if (env.mode != Mode.Prod)
     createTables()
 
+  // The UI strings for the language the browser prefers among play.i18n.langs, as a JSON object
+  // for the page. Keys missing in that language come from the default messages file.
+  private def messagesJson(implicit request: RequestHeader): String = {
+    val all  = messagesApi.messages
+    val lang = messagesApi.preferred(request).lang.code
+    Json.toJson(all.getOrElse("default", Map.empty[String, String]) ++ all.getOrElse(lang, Map.empty[String, String])).toString
+      .replace("</", "<\\/")
+  }
+
   def index(fiddleId: String, version: String) = silhouette.UserAwareAction.async { implicit request =>
     if (fiddleId.isEmpty) {
       indexCounter.increment()
@@ -92,7 +102,7 @@ class Application @Inject()(
     loadFiddle(fiddleId, version.toInt, source).map {
       case Success(fd) =>
         val fdJson = write(fd)
-        Ok(views.html.index("Kojo Fiddle", fdJson, if (fiddleId.nonEmpty) Some(s"$fiddleId/$version") else None))
+        Ok(views.html.index("Kojo Fiddle", fdJson, if (fiddleId.nonEmpty) Some(s"$fiddleId/$version") else None, messagesJson))
           .withHeaders(CACHE_CONTROL -> "max-age=3600")
       case Failure(ex) =>
         NotFound

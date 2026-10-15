@@ -5,7 +5,7 @@ import diode.data.Ready
 import japgolly.scalajs.react.vdom.all._
 import japgolly.scalajs.react.{BackendScope, _}
 
-import scalafiddle.client.{AppCircuit, AppModel, LoadUserFiddles, LoginData}
+import scalafiddle.client.{AppCircuit, AppModel, LoadUserFiddles, LoginData, Messages}
 
 object UserLogin {
 
@@ -22,9 +22,9 @@ object UserLogin {
             img(cls := "author", src := userInfo.avatarUrl.getOrElse("/assets/images/anon.png")),
             Dropdown("top right pointing", div(cls := "username", userInfo.name))(closeCB =>
               div(cls := "ui vertical menu", display.block)(
-                a(cls := "item", onClick --> { Callback(AppCircuit.dispatch(LoadUserFiddles)) >> closeCB() })("My fiddles")
+                a(cls := "item", onClick --> { Callback(AppCircuit.dispatch(LoadUserFiddles)) >> closeCB() })(Messages("ui.myFiddles"))
             )),
-            a(href := "/signout", div(cls := "ui basic button", "Sign out"))
+            a(href := "/signout", div(cls := "ui basic button", Messages("ui.signOut")))
           )
         case Ready(userInfo) if !userInfo.loggedIn =>
           loginData.loginProviders match {
@@ -33,11 +33,11 @@ object UserLogin {
               a(href := s"/authenticate/${provider.id}")(
                 div(cls := "ui button login")(
                   img(src := provider.logoUrl),
-                  s"Sign in with ${provider.name}"
+                  Messages("ui.signInWith", provider.name)
                 ))
             case Ready(loginProviders) =>
-              Dropdown("top basic button embed-options", span("Sign in", Icon.caretDown))(_ =>
-                div(cls := "menu", display.block)(div("Login providers")))
+              Dropdown("top basic button embed-options", span(Messages("ui.signIn"), Icon.caretDown))(_ =>
+                div(cls := "menu", display.block)(div(Messages("ui.loginProviders"))))
             case _ =>
               div(img(src := "/assets/images/wait-ring.gif"))
           }

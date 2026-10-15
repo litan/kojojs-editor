@@ -3,7 +3,7 @@ package scalafiddle.client.component
 import japgolly.scalajs.react._
 import org.scalajs.dom.raw.HTMLTextAreaElement
 
-import scalafiddle.client.ScalaFiddleConfig
+import scalafiddle.client.{Messages, ScalaFiddleConfig}
 import scalafiddle.shared.FiddleId
 import scala.scalajs.js
 
@@ -54,7 +54,7 @@ object EmbedEditor {
       div(cls := "embed-editor")(
         div(cls := "options")(
           div(cls := "ui form")(
-            div(cls := "header", "Theme"),
+            div(cls := "header", Messages("ui.embed.theme")),
             div(cls := "grouped fields")(
               themes.toTagMod { theme =>
                 div(cls := "field")(
@@ -65,16 +65,16 @@ object EmbedEditor {
                 )
               }
             ),
-            div(cls := "header", "Layout"),
+            div(cls := "header", Messages("ui.embed.layout")),
             div(cls := "two fields")(
               div(cls := "grouped fields")(
-                label(`for` := "layout")("Direction"),
+                label(`for` := "layout")(Messages("ui.embed.direction")),
                 div(cls := "field")(
                   div(cls := "ui radio checkbox")(
                     input.radio(name := "layout",
                                 checked := state.layout.isInstanceOf[Horizontal],
                                 onChange --> layoutChanged(Horizontal(state.layout.split))),
-                    label("Horizontal")
+                    label(Messages("ui.embed.horizontal"))
                   )
                 ),
                 div(cls := "field")(
@@ -82,17 +82,17 @@ object EmbedEditor {
                     input.radio(name := "layout",
                                 checked := state.layout.isInstanceOf[Vertical],
                                 onChange --> layoutChanged(Vertical(state.layout.split))),
-                    label("Vertical")
+                    label(Messages("ui.embed.vertical"))
                   )
                 )
               ),
               div(cls := "field")(
-                label(`for` := "split")("Split"),
+                label(`for` := "split")(Messages("ui.embed.split")),
                 input.range(min := 15, max := 85, value := state.layout.split, onChange ==> splitChanged)
               )
             ),
             div(cls := "field")(
-              div(cls := "header", "Embed code"),
+              div(cls := "header", Messages("ui.embed.code")),
               textarea(
                 cls := "embed-code",
                 value := createEmbedCode,
@@ -105,7 +105,7 @@ object EmbedEditor {
           )
         ),
         div(cls := "preview")(
-          div(cls := "header", "Preview"),
+          div(cls := "header", Messages("ui.embed.preview")),
           iframe(
             height := "400px",
             width := "100%",
