@@ -1,0 +1,37 @@
+# Runs LibrarianSpec (the reader of libraries.json) in CI.
+#
+# The editor's `server/test` (sbt 0.13 + Play 2.6) is not run by any job, so this spec could stay
+# red unnoticed. The librarian-test/ project compiles Librarian.scala and runs LibrarianSpec (the
+# editor's own files, not copies) on current sbt and Java 21.
+#
+# OUT OF SCOPE: the rest of the server (Play controllers, ApiGuardSpec, UpdateFiddleSpec, ...)
+# still runs only locally, with `JAVA_HOME=...1.8 sbt server/test`.
+name: librarian test
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  librarian-test:
+    name: LibrarianSpec
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      LANG: C.UTF-8
+      LC_ALL: C.UTF-8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+          cache: sbt
+      - uses: sbt/setup-sbt@v1
+      - name: librarian-test
+        working-directory: librarian-test
+        run: sbt -Dfile.encoding=UTF-8 -Dsun.jnu.encoding=UTF-8 test
