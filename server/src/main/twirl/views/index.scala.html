@@ -53,6 +53,7 @@
           // store configuration data in a global variable
           var cfg = {};
           cfg.compilerURL = "@config.get[String]("scalafiddle.compilerURL")";
+          cfg.engineURL = "@routes.Assets.versioned("javascript/cm-engine.js")";
           cfg.helpURL = "@config.get[String]("scalafiddle.helpURL")";
           cfg.scalaVersions = @Html(config.get[Seq[String]]("scalafiddle.scalaVersions").mkString("[\"","\",\"","\"]"));
           window.ScalaFiddleConfig = cfg;

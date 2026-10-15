@@ -374,98 +374,103 @@ object FiddleEditor {
 
     def mounted(props: Props): Callback = {
       Callback {
-        editor = new AceEngine(editorRef)
+        EditorEngine.create(editorRef) { engine =>
+          editor = engine
 
-        val globalBindings = Seq(
-          EditorBinding("Compile",
-                        "enter",
-                        () =>
-                          beginCompilation().foreach(_ => {
-                            buildFullSource
-                              .flatMap { source =>
-                                props.dispatch(compile(source, FastOpt))
-                              }
-                              .runNow()
-                          })),
-          EditorBinding("FullOptimize",
-                        "shift+enter",
-                        () =>
-                          beginCompilation().foreach(_ => {
-                            buildFullSource
-                              .flatMap { source =>
-                                props.dispatch(compile(source, FullOpt))
-                              }
-                              .runNow()
-                          })),
-          EditorBinding("Show JavaScript", "j", () => $.state.map(state => showJSCode(state)).runNow()),
-          EditorBinding(
-            "Save",
-            "s",
+          val globalBindings = Seq(
+            EditorBinding("Compile",
+                          "enter",
+                          () =>
+                            beginCompilation().foreach(_ => {
+                              buildFullSource
+                                .flatMap { source =>
+                                  props.dispatch(compile(source, FastOpt))
+                                }
+                                .runNow()
+                            })),
+            EditorBinding("FullOptimize",
+                          "shift+enter",
+                          () =>
+                            beginCompilation().foreach(_ => {
+                              buildFullSource
+                                .flatMap { source =>
+                                  props.dispatch(compile(source, FullOpt))
+                                }
+                                .runNow()
+                            })),
+            EditorBinding("Show JavaScript", "j", () => $.state.map(state => showJSCode(state)).runNow()),
+            EditorBinding(
+              "Save",
+              "s",
+              () =>
+                $.state
+                  .flatMap { state =>
+                    // select between save/update/fork
+                    val action =
+                      if (props.fiddleId.isEmpty)
+                        SaveFiddle(reconstructSource(state))
+                      else if (props
+                                 .data()
+                                 .author
+                                 .isEmpty || props.loginData().userInfo.exists(_.id == props.data().author.get.id))
+                        UpdateFiddle(reconstructSource(state))
+                      else
+                        ForkFiddle(reconstructSource(state))
+                    props.dispatch(action)
+                  }
+                  .runNow()
+            )
+          )
+          for (EditorBinding(name, key, func) <- globalBindings) {
+            val binding = js.Array(s"ctrl+$key", s"command+$key")
+            Mousetrap.bindGlobal(binding, (e: dom.KeyboardEvent) => { func(); false })
+          }
+
+          // register auto complete
+          editor.setCompleter { (row0, col0, prefix, callback) =>
+            val (row, col) = coordinatesFrom(row0, col0)
+            // build full source
+            buildFullSource
+              .flatMap { source =>
+                // dispatch an action to fetch completion results
+                props.dispatch(AutoCompleteFiddle(source, row, col, callback))
+              }
+              .runNow()
+          }
+
+          // listen for changes in source code
+          editor.onInput(
             () =>
               $.state
                 .flatMap { state =>
-                  // select between save/update/fork
-                  val action =
-                    if (props.fiddleId.isEmpty)
-                      SaveFiddle(reconstructSource(state))
-                    else if (props
-                               .data()
-                               .author
-                               .isEmpty || props.loginData().userInfo.exists(_.id == props.data().author.get.id))
-                      UpdateFiddle(reconstructSource(state))
-                    else
-                      ForkFiddle(reconstructSource(state))
-                  props.dispatch(action)
+                  props.dispatch(UpdateSource(reconstructSource(state)))
                 }
-                .runNow()
-          )
-        )
-        for (EditorBinding(name, key, func) <- globalBindings) {
-          val binding = js.Array(s"ctrl+$key", s"command+$key")
-          Mousetrap.bindGlobal(binding, (e: dom.KeyboardEvent) => { func(); false })
-        }
+                .runNow())
+          // focus to the editor
+          editor.focus()
 
-        // register auto complete
-        editor.setCompleter { (row0, col0, prefix, callback) =>
-          val (row, col) = coordinatesFrom(row0, col0)
-          // build full source
-          buildFullSource
-            .flatMap { source =>
-              // dispatch an action to fetch completion results
-              props.dispatch(AutoCompleteFiddle(source, row, col, callback))
+          // listen to messages from the iframe
+          dom.window.addEventListener("message", (e: MessageEvent) => {
+            e.data match {
+              case "evalCompleted" =>
+                $.modState(s => s.copy(status = CompilerStatus.Result)).runNow()
+              case _ =>
             }
-            .runNow()
+          })
+
+          // subscribe to changes in compiler data
+          unsubscribe = AppCircuit.subscribe(props.outputData)(outputDataUpdated)
+          unsubscribeLoginData = AppCircuit.subscribe(props.loginData)(_ => $.forceUpdate.runNow())
+
+          // updateFiddle writes to the engine, so it cannot run before the engine is ready: it is here
+          // and not in mounted's `>>` chain.
+          (props.dispatch(UpdateLoginInfo) >>
+            updateFiddle(props.data()) >>
+            Callback.when(props.fiddleId.isDefined)(
+              props.dispatch(
+                compile(addDeps(props.data().sourceCode, props.data().libraries, props.data().scalaVersion), FastOpt)))).runNow()
         }
-
-        // listen for changes in source code
-        editor.onInput(
-          () =>
-            $.state
-              .flatMap { state =>
-                props.dispatch(UpdateSource(reconstructSource(state)))
-              }
-              .runNow())
-        // focus to the editor
-        editor.focus()
-
-        // listen to messages from the iframe
-        dom.window.addEventListener("message", (e: MessageEvent) => {
-          e.data match {
-            case "evalCompleted" =>
-              $.modState(s => s.copy(status = CompilerStatus.Result)).runNow()
-            case _ =>
-          }
-        })
-
-        // subscribe to changes in compiler data
-        unsubscribe = AppCircuit.subscribe(props.outputData)(outputDataUpdated)
-        unsubscribeLoginData = AppCircuit.subscribe(props.loginData)(_ => $.forceUpdate.runNow())
-      } >>
-        props.dispatch(UpdateLoginInfo) >>
-        updateFiddle(props.data()) >>
-        Callback.when(props.fiddleId.isDefined)(
-          props.dispatch(
-            compile(addDeps(props.data().sourceCode, props.data().libraries, props.data().scalaVersion), FastOpt)))
+      }
     }
 
     val fiddleStart = """\s*// \$FiddleStart\s*$""".r
