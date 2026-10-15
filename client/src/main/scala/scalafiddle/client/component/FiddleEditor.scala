@@ -11,8 +11,6 @@ import org.scalajs.dom.raw.{Event, HTMLIFrameElement, MessageEvent}
 import scala.concurrent.ExecutionContext.Implicits.{global => ecGlobal}
 import scala.concurrent.{Future, Promise}
 import scala.scalajs.js
-import scala.scalajs.js.Dynamic._
-import scala.scalajs.js.{Dynamic => Dyn}
 import scala.util.{Random, Success}
 import scalafiddle.client._
 import scalafiddle.shared._
@@ -45,7 +43,7 @@ object FiddleEditor {
   case class Backend($ : BackendScope[Props, State]) {
     var unsubscribe: () => Unit          = () => ()
     var unsubscribeLoginData: () => Unit = () => ()
-    var editor: Dyn                      = _
+    var editor: EditorEngine             = _
     def resultFrame                      = dom.document.getElementById("resultframe").asInstanceOf[HTMLIFrameElement]
     @volatile var frameReady: Boolean    = false
     var pendingMessages: List[js.Object] = Nil
@@ -278,12 +276,6 @@ object FiddleEditor {
       }
     }
 
-    def complete(): Unit = {
-      editor.completer.showPopup(editor)
-      // needed for firefox on mac
-      editor.completer.cancelContextMenu()
-    }
-
     def beginCompilation(): Future[Unit] = {
       // fully clear the code iframe by reloading it
       val p = Promise[Unit]
@@ -301,7 +293,7 @@ object FiddleEditor {
     }
 
     def reconstructSource(state: State): String = {
-      val editorContent = editor.getSession().getValue().asInstanceOf[String]
+      val editorContent = editor.getValue
       val source = if (state.showTemplate) {
         editorContent
       } else {
@@ -381,22 +373,8 @@ object FiddleEditor {
     }
 
     def mounted(props: Props): Callback = {
-      import JsVal.jsVal2jsAny
-
       Callback {
-        // create the Ace editor and configure it
-        val Autocomplete = global.require("ace/autocomplete").Autocomplete
-        val completer    = Dyn.newInstance(Autocomplete)()
-        editor = global.ace.edit(editorRef)
-
-        editor.setTheme("ace/theme/eclipse")
-        editor.getSession().setMode("ace/mode/scala")
-        editor.getSession().setTabSize(2)
-        editor.setShowPrintMargin(false)
-        editor.getSession().setOption("useWorker", false)
-        editor.updateDynamic("completer")(completer) // because of SI-7420
-        editor.updateDynamic("$blockScrolling")(Double.PositiveInfinity)
-        editor.setFontSize("16px") // default is 14
+        editor = new AceEngine(editorRef)
 
         val globalBindings = Seq(
           EditorBinding("Compile",
@@ -447,102 +425,26 @@ object FiddleEditor {
           Mousetrap.bindGlobal(binding, (e: dom.KeyboardEvent) => { func(); false })
         }
 
-        val editorBindings = Seq(
-          EditorBinding("Complete", "Space", () => complete())
-        )
-        for (EditorBinding(name, key, func) <- editorBindings) {
-          val binding = s"Ctrl-$key|Cmd-$key"
-          editor.commands.addCommand(
-            JsVal.obj(
-              "name" -> name,
-              "bindKey" -> JsVal.obj(
-                "win"    -> binding,
-                "mac"    -> binding,
-                "sender" -> "editor|cli"
-              ),
-              "exec" -> func
-            ))
+        // register auto complete
+        editor.setCompleter { (row0, col0, prefix, callback) =>
+          val (row, col) = coordinatesFrom(row0, col0)
+          // build full source
+          buildFullSource
+            .flatMap { source =>
+              // dispatch an action to fetch completion results
+              props.dispatch(AutoCompleteFiddle(source, row, col, callback))
+            }
+            .runNow()
         }
 
-        // register auto complete
-        editor.completers = js.Array(
-          JsVal
-          .obj(
-            "getCompletions" -> { (editor: Dyn, session: Dyn, pos: Dyn, prefix: Dyn, callback: Dyn) =>
-              {
-                def applyResults(results: Seq[(String, String)]): Unit = {
-                  def params(signature: String): String = {
-                    val parts = signature.split(Array('(', ')'))
-                    if (parts.length > 2 && parts(0).length == 0) {
-                      val paramStr = parts(1)
-                      val params = paramStr.split(',')
-                      val pnames = params.map { p =>
-                        p.split(':')(0)
-                      }
-                      pnames.mkString("(", ", ", ")")
-                    }
-                    else {
-                      ""
-                    }
-                  }
-
-                  val aceVersion = results.map {
-                    case (name, value) =>
-                      val completionParams = params(name)
-                      JsVal
-                        .obj(
-                          "value" -> (value + completionParams),
-                          "caption" -> (value + name),
-                          "completer" -> JsVal.obj(
-                            "insertMatch" -> { (editor: Dyn, data: Dyn) =>
-                              val text = data.value.asInstanceOf[String]
-                              editor.removeWordLeft()
-                              val completionStartPos = editor.getCursorPosition()
-                              editor.session.insert(completionStartPos, text)
-                              val completionStartCol = completionStartPos.column.asInstanceOf[Int]
-                              val bracketOpenIndex = text.indexOf('(')
-                              val bracketCloseIndex = text.indexOf(')')
-                              val delta = if (bracketOpenIndex != -1) {
-                                if (bracketCloseIndex == bracketOpenIndex + 1) bracketOpenIndex + 2 else bracketOpenIndex + 1
-                              }
-                              else {
-                                text.length
-                              }
-                              editor.moveCursorTo(completionStartPos.row, completionStartCol + delta)
-                              val paramsStrLen = completionParams.length
-                              if (paramsStrLen != 0 && paramsStrLen != 2) {
-                                // avoid no params and empty brackets
-                                editor.getSelection().selectWordRight()
-                              }
-                            }
-                          ).value
-                        )
-                        .value
-                  }
-                  callback(null, js.Array(aceVersion: _*))
-                }
-                val (row, col) = coordinatesFrom(pos.row.asInstanceOf[Int], pos.column.asInstanceOf[Int])
-                // build full source
-                buildFullSource
-                  .flatMap { source =>
-                    // dispatch an action to fetch completion results
-                    props.dispatch(AutoCompleteFiddle(source, row, col, applyResults))
-                  }
-                  .runNow()
-              }
-            }
-          )
-          .value
-        )
-
         // listen for changes in source code
-        editor.on("input",
-                  () =>
-                    $.state
-                      .flatMap { state =>
-                        props.dispatch(UpdateSource(reconstructSource(state)))
-                      }
-                      .runNow())
+        editor.onInput(
+          () =>
+            $.state
+              .flatMap { state =>
+                props.dispatch(UpdateSource(reconstructSource(state)))
+              }
+              .runNow())
         // focus to the editor
         editor.focus()
 
@@ -592,12 +494,12 @@ object FiddleEditor {
       val (pre, main, post) = extractCode(fiddle.sourceCode)
       $.state.flatMap { state =>
         if (state.showTemplate) {
-          editor.getSession().setValue((pre ++ main ++ post).mkString("\n"))
+          editor.setValue((pre ++ main ++ post).mkString("\n"))
           $.setState(state.copy(preCode = pre, mainCode = main, postCode = post, indent = 0))
         } else {
           // figure out indentation
           val indent = main.filter(_.nonEmpty).map(_.takeWhile(_ == ' ').length).min
-          editor.getSession().setValue(main.map(_.drop(indent)).mkString("\n"))
+          editor.setValue(main.map(_.drop(indent)).mkString("\n"))
           $.setState(state.copy(preCode = pre, mainCode = main, postCode = post, indent = indent))
         }
       }
@@ -613,18 +515,17 @@ object FiddleEditor {
 
     def switchTemplate: Callback = {
       $.modState { s =>
-        val row               = editor.getCursorPosition().row.asInstanceOf[Int]
-        val col               = editor.getCursorPosition().column.asInstanceOf[Int]
+        val (row, col)        = editor.getCursorPosition
         val source            = reconstructSource(s)
         val (pre, main, post) = extractCode(source)
         if (!s.showTemplate) {
-          editor.getSession().setValue((pre ++ main ++ post).mkString("\n"))
+          editor.setValue((pre ++ main ++ post).mkString("\n"))
           editor.moveCursorTo(row + pre.size, col + s.indent)
           s.copy(preCode = pre, mainCode = main, postCode = post, indent = 0, showTemplate = !s.showTemplate)
         } else {
           // figure out indentation
           val indent = main.filter(_.nonEmpty).map(_.takeWhile(_ == ' ').length).min
-          editor.getSession().setValue(main.map(_.drop(indent)).mkString("\n"))
+          editor.setValue(main.map(_.drop(indent)).mkString("\n"))
           editor.moveCursorTo(math.max(0, row - pre.size), math.max(0, col - indent))
           s.copy(preCode = pre, mainCode = main, postCode = post, indent = indent, showTemplate = !s.showTemplate)
         }
@@ -636,25 +537,17 @@ object FiddleEditor {
     def outputDataUpdated(data: ModelRO[OutputData]): Unit = {
       data() match {
         case compilerData: CompilerData =>
-          import scala.scalajs.js.JSConverters._
           clearResult()
 
           // show error messages, if any
-          editor.getSession().clearAnnotations()
+          editor.clearAnnotations()
           if (compilerData.annotations.nonEmpty) {
-            val aceAnnotations = compilerData.annotations.map { ann =>
+            val annotations = compilerData.annotations.map { ann =>
               // adjust coordinates
               val (row, col) = coordinatesTo(ann.row, ann.col)
-              JsVal
-                .obj(
-                  "row"  -> row,
-                  "col"  -> col,
-                  "text" -> ann.text.mkString("\n"),
-                  "type" -> ann.tpe
-                )
-                .value
-            }.toJSArray
-            editor.getSession().setAnnotations(aceAnnotations)
+              EditorEngine.Diagnostic(row, col, ann.text.mkString("\n"), ann.tpe)
+            }
+            editor.setAnnotations(annotations)
 
             // show compiler errors in output
             val allErrors = compilerData.annotations
