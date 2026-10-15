@@ -1,0 +1,37 @@
+# The CodeMirror engine (cm-engine/): the generated bundle is up to date, and the facade's contract
+# holds in headless Chrome.
+#
+# The editor's own build (sbt 0.13) is not run in CI; this job needs only npm, esbuild and Playwright.
+# server/src/main/assets/javascript/cm-engine.js is a COMMITTED generated file: it is rebuilt here and
+# compared byte for byte. A bundle edited by hand, or committed without rebuilding, turns this red.
+name: cm-engine
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  cm-engine:
+    name: "CodeMirror engine: bundle is current, contract holds"
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    defaults:
+      run:
+        working-directory: cm-engine
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+          cache-dependency-path: cm-engine/package-lock.json
+      - name: dependencies (from the lock file)
+        run: npm ci --no-audit --no-fund
+      - name: generated bundle is current
+        run: npm run check
+      - name: contract test (headless Chrome)
+        run: CHROME_BIN="$(command -v google-chrome)" npm test
