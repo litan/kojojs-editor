@@ -1,4 +1,4 @@
-@(title: String, fiddleData: String, fiddleId: Option[String])(implicit config: play.api.Configuration, env: play.api.Environment)
+@(title: String, fiddleData: String, fiddleId: Option[String], messages: String)(implicit config: play.api.Configuration, env: play.api.Environment)
 
 <!DOCTYPE html>
 
@@ -54,6 +54,7 @@
           var cfg = {};
           cfg.compilerURL = "@config.get[String]("scalafiddle.compilerURL")";
           cfg.engineURL = "@routes.Assets.versioned("javascript/cm-engine.js")";
+          cfg.messages = @Html(messages);
           cfg.helpURL = "@config.get[String]("scalafiddle.helpURL")";
           cfg.scalaVersions = @Html(config.get[Seq[String]]("scalafiddle.scalaVersions").mkString("[\"","\",\"","\"]"));
           window.ScalaFiddleConfig = cfg;

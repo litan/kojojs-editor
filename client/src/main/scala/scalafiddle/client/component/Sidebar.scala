@@ -52,24 +52,24 @@ object Sidebar {
         case Some(userInfo) if userInfo.id != "anonymous" =>
           (userInfo.name, userInfo.avatarUrl.getOrElse("/assets/images/anon.png"))
         case _ =>
-          ("Anonymous", "/assets/images/anon.png")
+          (Messages("ui.anonymous"), "/assets/images/anon.png")
       }
       div.ref(sideBarRef = _)(cls := "sidebar folded")(
         div.ref(accordionRef = _)(cls := "ui accordion")(
-          div(cls := "title large active", "Info", i(cls := "icon dropdown")),
+          div(cls := "title large active", Messages("ui.info"), i(cls := "icon dropdown")),
           div(cls := "content active")(
             div(cls := "ui form")(
               div(cls := "field")(
-                label("Name"),
-                input.text(placeholder := "Untitled", name := "name", value := fd.name, onChange ==> {
+                label(Messages("ui.name")),
+                input.text(placeholder := Messages("ui.untitled"), name := "name", value := fd.name, onChange ==> {
                   (e: ReactEventFromInput) =>
                     props.dispatch(UpdateInfo(e.target.value, fd.description))
                 })
               ),
               div(cls := "field")(
-                label("Description"),
+                label(Messages("ui.description")),
                 input.text(
-                  placeholder := "Enter description",
+                  placeholder := Messages("ui.enterDescription"),
                   name := "description",
                   value := fd.description,
                   onChange ==> { (e: ReactEventFromInput) =>
@@ -78,7 +78,7 @@ object Sidebar {
                 )
               ),
               div(cls := "field")(
-                label("Author"),
+                label(Messages("ui.author")),
                 img(cls := "author", src := authorImage),
                 authorName
               )

@@ -88,7 +88,7 @@ object FiddleEditor {
                 }))
               },
               Icon.play,
-              "Run"
+              Messages("ui.run")
             ),
             div(
               cls := "ui basic button",
@@ -100,22 +100,22 @@ object FiddleEditor {
                 }))
               },
               Icon.stop,
-              "Stop/Reload"
+              Messages("ui.stopReload")
             ),
             div(cls := "ui basic button", onClick --> props.dispatch(SaveFiddle(reconstructSource(state))))(
               Icon.save,
-              "Save").when(showSave),
+              Messages("ui.save")).when(showSave),
             div(cls := "ui basic button", onClick --> props.dispatch(UpdateFiddle(reconstructSource(state))))(
               Icon.pencilSquare,
-              "Update").when(showUpdate),
+              Messages("ui.update")).when(showUpdate),
             div(cls := "ui basic button", onClick --> props.dispatch(ForkFiddle(reconstructSource(state))))(
               Icon.codeFork,
-              "Fork").when(fiddleHasId)
+              Messages("ui.fork")).when(fiddleHasId)
           ),
           div(cls := "right")(
             div(cls := "ui basic button")(
               Icon.book,
-              a(href := "https://docs.kogics.net/ikojo.html", target := "_blank", "Help / Docs")
+              a(href := "https://docs.kogics.net/ikojo.html", target := "_blank", Messages("ui.help"))
             ),
             UserLogin(props.loginData)
           )
@@ -155,18 +155,18 @@ object FiddleEditor {
                   .toMap
                 div(cls := "output")(
                   div(id := "output")(
-                    h1("My fiddles"),
+                    h1(Messages("ui.myFiddles")),
                     if (fiddles.isEmpty) {
-                      p("No fiddles stored")
+                      p(Messages("ui.noFiddles"))
                     } else {
                       table(cls := "ui celled table fiddle-list")(
                         thead(
                           tr(
-                            th("Id", width := "10%"),
-                            th("Name"),
-                            th("Versions"),
-                            th("Latest update"),
-                            th("Libs", width := "20%")
+                            th(Messages("ui.col.id"), width := "10%"),
+                            th(Messages("ui.col.name")),
+                            th(Messages("ui.col.versions")),
+                            th(Messages("ui.col.latestUpdate")),
+                            th(Messages("ui.col.libs"), width := "20%")
                           )
                         ),
                         tbody(

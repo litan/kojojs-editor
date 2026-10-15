@@ -1,0 +1,34 @@
+# UI strings, English. Another language is a messages.<code> file next to this one
+# plus its code in play.i18n.langs; keys missing there fall back to this file.
+ui.run=Run
+ui.stopReload=Stop/Reload
+ui.save=Save
+ui.update=Update
+ui.fork=Fork
+ui.help=Help / Docs
+ui.signOut=Sign out
+ui.signIn=Sign in
+ui.signInWith=Sign in with {0}
+ui.loginProviders=Login providers
+ui.myFiddles=My fiddles
+ui.noFiddles=No fiddles stored
+ui.col.id=Id
+ui.col.name=Name
+ui.col.versions=Versions
+ui.col.latestUpdate=Latest update
+ui.col.libs=Libs
+ui.info=Info
+ui.name=Name
+ui.untitled=Untitled
+ui.description=Description
+ui.enterDescription=Enter description
+ui.author=Author
+ui.anonymous=Anonymous
+ui.embed.theme=Theme
+ui.embed.layout=Layout
+ui.embed.direction=Direction
+ui.embed.horizontal=Horizontal
+ui.embed.vertical=Vertical
+ui.embed.split=Split
+ui.embed.code=Embed code
+ui.embed.preview=Preview
