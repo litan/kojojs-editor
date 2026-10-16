@@ -73,6 +73,12 @@ class Application @Inject()(
   actorSystem.scheduler.schedule(config.get[Int]("scalafiddle.refreshLibraries").seconds,
                                  config.get[Int]("scalafiddle.refreshLibraries").seconds)(librarian.refresh())
   val defaultSource = config.get[String]("scalafiddle.defaultSource")
+  val langTurtles   = config.get[Map[String, String]]("scalafiddle.langTurtles")
+
+  // The source of a new fiddle: defaultSource with the turtle wrapper for the language. A fiddle that
+  // was saved keeps the wrapper it was saved with.
+  private def defaultSourceFor(lang: Option[Lang]): String =
+    defaultSource.replace("$LangTurtle", lang.flatMap(l => langTurtles.get(l.code)).getOrElse(langTurtles("default")))
 
   if (env.mode != Mode.Prod)
     createTables()
@@ -107,10 +113,10 @@ class Application @Inject()(
 
     val source = request.getQueryString("zrc").flatMap(decodeSource) orElse request.getQueryString("source")
 
-    loadFiddle(fiddleId, version.toInt, source).map {
+    val lang = pageLang
+    loadFiddle(fiddleId, version.toInt, source, Some(lang)).map {
       case Success(fd) =>
         val fdJson = write(fd)
-        val lang = pageLang
         val page = Ok(views.html.index("Kojo Fiddle", fdJson, if (fiddleId.nonEmpty) Some(s"$fiddleId/$version") else None, messagesJson(lang)))
           .withHeaders(CACHE_CONTROL -> "max-age=3600")
         // remember an explicit ?lang= in the language cookie
@@ -338,9 +344,9 @@ class Application @Inject()(
       }
     }
 
-  private def loadFiddle(id: String, version: Int, sourceOpt: Option[String] = None): Future[Try[FiddleData]] = {
+  private def loadFiddle(id: String, version: Int, sourceOpt: Option[String] = None, lang: Option[Lang] = None): Future[Try[FiddleData]] = {
     if (id == "") {
-      val (source, libs) = parseFiddle(sourceOpt.fold(defaultSource)(identity))
+      val (source, libs) = parseFiddle(sourceOpt.fold(defaultSourceFor(lang))(identity))
       Future.successful(
         Success(
           FiddleData("",
