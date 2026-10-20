@@ -75,6 +75,12 @@ class Application @Inject()(
   val defaultSource = config.get[String]("scalafiddle.defaultSource")
   val langTurtles   = config.get[Map[String, String]]("scalafiddle.langTurtles")
 
+  val langScalaVersions = config.get[Map[String, String]]("scalafiddle.langScalaVersions")
+
+  // The Scala version label of a new fiddle: the one set for the language, else the default.
+  private def scalaVersionFor(lang: Option[Lang]): String =
+    lang.flatMap(l => langScalaVersions.get(l.code)).getOrElse(config.get[String]("scalafiddle.defaultScalaVersion"))
+
   // The source of a new fiddle: defaultSource with the turtle wrapper for the language. A fiddle that
   // was saved keeps the wrapper it was saved with.
   private def defaultSourceFor(lang: Option[Lang]): String =
@@ -354,7 +360,7 @@ class Application @Inject()(
                      source,
                      libs,
                      librarian.libraries,
-                     config.get[String]("scalafiddle.defaultScalaVersion"),
+                     scalaVersionFor(lang),
                      None)))
     } else {
       ask(persistence, FindFiddle(id, version)).mapTo[Try[Fiddle]].flatMap {
