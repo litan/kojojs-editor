@@ -76,7 +76,7 @@ object EditorEngine {
       case Cm =>
         val s = dom.document.createElement("script").asInstanceOf[dom.raw.HTMLScriptElement]
         s.src = ScalaFiddleConfig.engineURL
-        s.onload = (_: dom.Event) => done(new CmEngine(global.EditorEngine.create(el)), Cm)
+        s.onload = (_: dom.Event) => done(new CmEngine(global.EditorEngine.create(el, ScalaFiddleConfig.editorOptions)), Cm)
         // scala-js-dom 0.9's HTMLScriptElement has no onerror; use addEventListener.
         s.addEventListener("error", (_: dom.Event) => {
           dom.console.warn("cm-engine.js failed to load (" + ScalaFiddleConfig.engineURL + "); using Ace")
