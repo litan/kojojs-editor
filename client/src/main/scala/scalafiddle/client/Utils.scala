@@ -74,6 +74,7 @@ object ScalaFiddleConfig extends js.Object {
   val engineURL: String               = js.native
   val helpURL: String                 = js.native
   val messages: js.Dictionary[String] = js.native
+  val editorOptions: js.Dynamic       = js.native
   val scalaVersions: js.Array[String] = js.native
 }
 

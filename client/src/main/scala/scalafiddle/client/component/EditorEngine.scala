@@ -42,10 +42,11 @@ object EditorEngine {
 
   /**
    * Reads the choice from the address and keeps it in the browser; it must be the FIRST thing
-   * AppMain.main does. The router (AppRouter) does not know `?engine=cm` and redirects the address
+   * AppMain.main does. The router (AppRouter) does not know `?engine=ace` and redirects the address
    * to `/` (notFound -> Redirect.Replace), so by the time FiddleEditor mounts the query is gone.
    * Keeping it in localStorage means the flag is given once and survives saving, reloading and moving
-   * to /sf/...; `?engine=ace` takes it back. If localStorage is unavailable (private window) the
+   * to /sf/...; `?engine=cm` takes it back. CodeMirror is the default; Ace stays for a browser that
+   * fails to load it and for `?engine=ace`. If localStorage is unavailable (private window) the
    * choice holds for this page load only.
    */
   def readFlags(): Unit = {
@@ -55,8 +56,8 @@ object EditorEngine {
     choice = fromUrl.orElse(stored).filter(e => e == Cm || e == Ace)
   }
 
-  /** The selected engine: what `readFlags` found; Ace if nothing was found or it was never called. */
-  def selected: String = choice.getOrElse(Ace)
+  /** The selected engine: what `readFlags` found; CodeMirror if nothing was found or it was never called. */
+  def selected: String = choice.getOrElse(Cm)
 
   /**
    * Builds the engine and calls `ready` when it is usable. Ace is synchronous. CodeMirror comes from a
@@ -76,7 +77,7 @@ object EditorEngine {
       case Cm =>
         val s = dom.document.createElement("script").asInstanceOf[dom.raw.HTMLScriptElement]
         s.src = ScalaFiddleConfig.engineURL
-        s.onload = (_: dom.Event) => done(new CmEngine(global.EditorEngine.create(el)), Cm)
+        s.onload = (_: dom.Event) => done(new CmEngine(global.EditorEngine.create(el, ScalaFiddleConfig.editorOptions)), Cm)
         // scala-js-dom 0.9's HTMLScriptElement has no onerror; use addEventListener.
         s.addEventListener("error", (_: dom.Event) => {
           dom.console.warn("cm-engine.js failed to load (" + ScalaFiddleConfig.engineURL + "); using Ace")

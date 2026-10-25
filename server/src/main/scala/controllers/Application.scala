@@ -77,6 +77,12 @@ class Application @Inject()(
 
   val langScalaVersions = config.get[Map[String, String]]("scalafiddle.langScalaVersions")
 
+  val langKeywords      = config.get[Map[String, Seq[String]]]("scalafiddle.langKeywords")
+
+  // The options the page gives to the editor engine (keywords and locale of the language)
+  private def editorOptions(lang: Lang): String =
+    EditorOptions.json(lang.code, langScalaVersions, langKeywords)
+
   // The Scala version label of a new fiddle: the one set for the language, else the default.
   private def scalaVersionFor(lang: Option[Lang]): String =
     lang.flatMap(l => langScalaVersions.get(l.code)).getOrElse(config.get[String]("scalafiddle.defaultScalaVersion"))
@@ -123,7 +129,7 @@ class Application @Inject()(
     loadFiddle(fiddleId, version.toInt, source, Some(lang)).map {
       case Success(fd) =>
         val fdJson = write(fd)
-        val page = Ok(views.html.index("Kojo Fiddle", fdJson, if (fiddleId.nonEmpty) Some(s"$fiddleId/$version") else None, messagesJson(lang)))
+        val page = Ok(views.html.index("Kojo Fiddle", fdJson, if (fiddleId.nonEmpty) Some(s"$fiddleId/$version") else None, messagesJson(lang), editorOptions(lang)))
           .withHeaders(CACHE_CONTROL -> "max-age=3600")
         // remember an explicit ?lang= in the language cookie
         if (request.getQueryString("lang").isDefined) messagesApi.setLang(page, lang) else page
